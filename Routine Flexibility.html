@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Athletics Mental Skills Quiz</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Palette: Deep Blue (#0A3D62) and Vibrant Gold/Orange (#FF8C00) -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F0F4F8; /* Light gray-blue background */
+            color: #1F2937;
+        }
+        .quiz-container {
+            max-width: 800px;
+        }
+        .answer-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid #D1D5DB;
+            min-height: 80px; /* Ensure cards have some minimal height */
+        }
+        .answer-card:hover:not(.selected) {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-color: #0A3D62;
+        }
+        .selected.correct {
+            background-color: #D1FAE5; /* Light Green */
+            border-color: #10B981; /* Green */
+            box-shadow: 0 4px 10px rgba(16, 185, 129, 0.5);
+            pointer-events: none;
+        }
+        .selected.incorrect {
+            background-color: #FEE2E2; /* Light Red */
+            border-color: #EF4444; /* Red */
+            pointer-events: none;
+        }
+        .unselected {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+        .feedback-box {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body class="antialiased p-4 md:p-8">
+
+    <div class="quiz-container mx-auto bg-white rounded-xl shadow-2xl p-6 md:p-10">
+        <header class="mb-8 text-center">
+            <h1 class="text-4xl font-extrabold text-[#0A3D62] border-b-4 border-[#FF8C00] pb-2 inline-block">The Autonomy Trainer</h1>
+            <p class="text-lg text-gray-600 mt-2">Level up your mental game: Routine Flexibility</p>
+        </header>
+
+        <div id="quiz-area">
+            <div id="question-counter" class="text-center text-sm font-semibold text-gray-500 mb-4">Question 1 of 12</div>
+            
+            <h2 id="question-text" class="text-2xl font-semibold text-gray-800 mb-6 leading-relaxed"></h2>
+
+            <div id="answer-options" class="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+                <!-- Answer cards will be injected here -->
+            </div>
+
+            <div id="feedback-section" class="hidden feedback-box p-4 rounded-lg">
+                <h3 id="feedback-title" class="font-bold text-lg mb-2"></h3>
+                <p id="feedback-explanation"></p>
+            </div>
+
+            <div class="text-center mt-8">
+                <button id="next-question-btn" class="hidden px-8 py-3 bg-[#FF8C00] text-white font-bold rounded-lg shadow-lg hover:bg-[#CC7000] transition duration-300 disabled:opacity-50" disabled>
+                    Next Challenge
+                </button>
+                <div id="results" class="hidden text-2xl font-bold text-center mt-6 p-4 bg-gray-100 rounded-lg space-y-4">
+                    <!-- Results content and buttons injected here -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const quizData = [
+            {
+                question: "Scenario 1: Your coach is 15 minutes late, and you have a 30-minute warm-up planned. What shows the most autonomy?",
+                answers: [
+                    { text: "Stand by the track and wait. It's the coach's job to start the session.", isCorrect: false, explanation: "Waiting relies too much on others. **Autonomy** means taking charge of your own time and routine, even when external factors change." },
+                    { text: "Start your pre-planned warm-up exactly as usual, and tell the coach when they arrive.", isCorrect: true, explanation: "This is the **autonomous** choice! Starting your routine on time shows **initiative** and **discipline**. You own your preparation, not the coach." },
+                    { text: "Do a quick, messy 5-minute jog to save energy, and sit down until the coach arrives.", isCorrect: false, explanation: "A quick, messy warm-up cheats your body and shows a rigid mindset. **Flexibility** means keeping the quality of the routine, even if the timing is off." },
+                    { text: "Check your phone to pass the time until the coach walks onto the track.", isCorrect: false, explanation: "Checking your phone breaks your mental focus and distracts you from your purpose. **Discipline** is maintaining focus regardless of delays." }
+                ]
+            },
+            {
+                question: "Scenario 2: Heavy rain cancels your outdoor speed session. You have the choice to skip it or change plans. What shows the best flexibility?",
+                answers: [
+                    { text: "Skip the session completely and decide to take an unexpected rest day instead.", isCorrect: false, explanation: "Skipping shows a lack of **rigor**. Champions adapt! You need to find a way to maintain training consistency." },
+                    { text: "Immediately find a gym or covered area and perform a planned substitution session (like resistance training or drills).", isCorrect: true, explanation: "This demonstrates **flexibility**. When Plan A fails, you autonomously execute a quality Plan B without needing your coach to tell you what to do." },
+                    { text: "Stay outside and try to train in the rain, risking injury because the surface is wet.", isCorrect: false, explanation: "This is rigid and unsafe. **Adaptability** means prioritizing safety and making smart decisions based on the environment, not ignoring clear risks." },
+                    { text: "Do a light stretch at home, assuming the rain means you didn't need to train hard anyway.", isCorrect: false, explanation: "This compromises intensity. **Autonomy** means finding a replacement that matches the session's intended effort." }
+                ]
+            },
+            {
+                question: "Scenario 3: It's late in the week and you feel very tired, but your schedule says you must do 3 sets of heavy lifts. How do you adapt autonomously?",
+                answers: [
+                    { text: "Do the full 3 sets of heavy lifts anyway, even if your form is terrible and you feel weak.", isCorrect: false, explanation: "This is rigid and dangerous. **Autonomy** means listening to your body. Bad form leads to injury, which completely ruins the routine." },
+                    { text: "Reduce the weight or sets (e.g., do only 2 sets), focus on perfect, high-quality form, and record the change in your training log.", isCorrect: true, explanation: "This is the most **mature and flexible** choice. You show **self-management** by adapting the *intensity* while maintaining the *quality* of the task. You are in control of your body." },
+                    { text: "Quit the gym immediately, get annoyed, and decide you'll catch up next week.", isCorrect: false, explanation: "Getting annoyed and quitting shows a lack of emotional regulation. **Resilience** means adapting the plan, not abandoning it entirely due to a small frustration." },
+                    { text: "Only perform the first set, and if you still feel tired, leave the gym.", isCorrect: false, explanation: "This is arbitrary. The best adaptation is a planned, quality reduction, not an on-the-fly decision to quit." }
+                ]
+            },
+            {
+                question: "Scenario 4: You finished your main workout but feel exhausted and your mind is wandering during the planned cool-down. What's the best way to maintain routine quality?",
+                answers: [
+                    { text: "Cut the cool-down short—you earned the rest and the main work is done.", isCorrect: false, explanation: "Cutting short neglects recovery. **Routine adherence** means respecting every phase. Skip the distractions, not the recovery." },
+                    { text: "Mentally use a focus cue (like counting your breaths) to complete the full cool-down with deliberate, slow movements.", isCorrect: true, explanation: "Using a focus cue builds **resilience** against distraction and fatigue. This shows **discipline** and ensures you complete the routine to its highest standard." },
+                    { text: "Ask a teammate to watch you and tell you if you miss a stretch.", isCorrect: false, explanation: "This outsources your focus. **Autonomy** requires you to manage your own focus and self-monitor your routine." },
+                    { text: "Just go through the motions quickly so you can get home faster.", isCorrect: false, explanation: "Rushing sacrifices the quality of your recovery and flexibility. Every part of the routine must be done deliberately." }
+                ]
+            },
+            {
+                question: "Scenario 5: You forget your water bottle at home right before a hot training session. What is the most flexible, autonomous response?",
+                answers: [
+                    { text: "Tell the coach you can't train today because you didn't bring your gear.", isCorrect: false, explanation: "This is a failure of **autonomy**. A forgotten bottle is a minor problem that can be easily solved by taking initiative." },
+                    { text: "Immediately find the nearest water fountain or store and solve the problem before starting the warm-up.", isCorrect: true, explanation: "Solving the problem immediately shows **autonomy** and prevents a minor issue from disrupting the quality of your entire training session. This is flexible thinking." },
+                    { text: "Train without water and try to just get through it.", isCorrect: false, explanation: "Training dehydrated is unsafe and reckless. **Self-management** means prioritizing your health and safety above all." },
+                    { text: "Ask a teammate if you can borrow their bottle for the entire session.", isCorrect: false, explanation: "Relying on a teammate for essential personal gear isn't fully autonomous. You should solve the issue yourself." }
+                ]
+            },
+            {
+                question: "Scenario 6: You show up to the track and realize the key equipment for your hurdle drills (a specific block) is missing. What is the best immediate adaptation?",
+                answers: [
+                    { text: "Get frustrated and wait for the coach to arrive to solve the equipment problem.", isCorrect: false, explanation: "Waiting is passive. **Autonomy** means you take charge of the environment. If it's a minor issue, you should attempt to resolve it yourself first." },
+                    { text: "Do a similar drill that uses a different piece of equipment you know is available, and then find the block later.", isCorrect: true, explanation: "This is excellent **flexibility**. You maintain the *purpose* of the workout (hurdle rhythm/form) by substituting a viable drill and keep the session moving." },
+                    { text: "Immediately call the coach to complain about the missing equipment.", isCorrect: false, explanation: "Calling to complain wastes time and shows a focus on external blame, not internal problem-solving." },
+                    { text: "Go home because you can't do the planned drill exactly as written.", isCorrect: false, explanation: "This is the opposite of flexibility. **Adaptability** means finding an acceptable alternative to keep the training objective on track." }
+                ]
+            },
+            {
+                question: "Scenario 7: During a critical rest period between sprints, your phone buzzes with a friend's message. How do you maintain focus on your routine?",
+                answers: [
+                    { text: "Check the message quickly, then try to get back to the routine.", isCorrect: false, explanation: "Checking the phone breaks the **flow** of the routine and floods your mind with distraction, negatively impacting recovery." },
+                    { text: "Turn your phone face down/off, use a deep breath to refocus, and commit fully to the 5-minute rest period.", isCorrect: true, explanation: "This is a perfect use of a **routine cue** (deep breath) to build a mental 'bubble' of focus. You are actively managing your environment." },
+                    { text: "Keep the phone in your pocket; the distraction is only minor.", isCorrect: false, explanation: "Minor distractions add up. **Discipline** means removing all non-essential distractions during key routine moments." },
+                    { text: "Ignore the buzz, but let yourself think about what the message might say.", isCorrect: false, explanation: "Thinking about the message is still a distraction. **Focus** requires replacing the thought with the next step of your routine." }
+                ]
+            },
+            {
+                question: "Scenario 8: You are feeling strong and decide to do an extra 100m sprint at the end of practice without telling the coach. Is this autonomous or reckless?",
+                answers: [
+                    { text: "Autonomous, because it shows I'm taking initiative for my own progress.", isCorrect: false, explanation: "This is **reckless**. **Autonomy** means making smart, self-managed decisions *within* the plan, not adding volume that could risk injury or overtraining without proper oversight." },
+                    { text: "Reckless, because adding unplanned, high-intensity volume increases injury risk.", isCorrect: true, explanation: "This is the **mature** answer. **Self-management** means prioritizing the structure and safety of the long-term training plan over a feeling of temporary strength." },
+                    { text: "Flexible, because I am adapting the plan based on how I feel.", isCorrect: false, explanation: "True **flexibility** involves making minor adjustments (like reducing weight due to fatigue), not major, unplanned additions to high-stress activities." },
+                    { text: "It's fine as long as I do a very long cool-down afterward.", isCorrect: false, explanation: "The issue is unplanned stress and injury risk, not the cool-down. Stick to the structure of the training plan." }
+                ]
+            },
+            {
+                question: "Scenario 9: You have a scheduled 1-hour physiotherapy session, but the physiotherapist can only give you 30 minutes. What's the best flexible plan?",
+                answers: [
+                    { text: "Be frustrated about the short time and decide to skip the session completely.", isCorrect: false, explanation: "Skipping shows poor **adaptability**. Getting 30 minutes is far better than getting zero minutes of treatment." },
+                    { text: "Ask the physio to focus only on the two most important problem areas, then use the extra 30 minutes to do your recovery exercises independently.", isCorrect: true, explanation: "This shows **autonomy and flexibility**. You take the available resource (30 mins of physio) and then autonomously manage the remaining time for productive recovery." },
+                    { text: "Try to rush the full 60-minute routine into the 30 minutes provided.", isCorrect: false, explanation: "Rushing reduces quality and risks irritation. **Flexibility** means prioritizing quality and focus over rigid quantity." },
+                    { text: "Tell the physio they must prioritize you because you are an athlete with a strict schedule.", isCorrect: false, explanation: "This is a failure of social **composure**. You must accept changes politely and adapt your plan." }
+                ]
+            },
+            {
+                question: "Scenario 10: Just before your race, a rival athlete starts trash-talking you. How do you use your pre-race routine to regain focus?",
+                answers: [
+                    { text: "Engage the rival with a quick comeback to show confidence.", isCorrect: false, explanation: "Engaging breaks your mental bubble and gives your energy away. **Routine** is your shield against distraction." },
+                    { text: "Immediately start the next step of your routine (e.g., visualize the first 50 meters, tie your shoes) and use a mental cue like 'Process Now'.", isCorrect: true, explanation: "Your **pre-race routine** is your **psychological anchor**. Focusing on the next small, physical step brings your mind back to the present and away from the noise." },
+                    { text: "Try to ignore the rival, but keep thinking about what they said.", isCorrect: false, explanation: "Ignoring them physically while thinking about them mentally is still a distraction. You must actively replace the thought with the routine." },
+                    { text: "Start intensely staring at the finish line to show them you are focused.", isCorrect: false, explanation: "Staring is often perceived as aggression. True **focus** is internal, calm, and process-oriented." }
+                ]
+            },
+            {
+                question: "Scenario 11: Halfway through your 400m repetition, you start doubting if you can maintain the pace. What self-talk best demonstrates **autonomy**?",
+                answers: [
+                    { text: "Tell yourself, 'I have to maintain this pace or the coach will be mad.'", isCorrect: false, explanation: "This outsources your motivation to fear. **Autonomy** means using internal motivation and self-control." },
+                    { text: "Focus your mind on a simple, physical cue like 'Drive the knees' or 'Long stride' until the end.", isCorrect: true, explanation: "This is the most effective use of **self-talk**. It's positive, focuses on the *process* you control, and uses a cue to maintain discipline despite fatigue." },
+                    { text: "Mentally check your watch every 50 meters to make sure you are on pace.", isCorrect: false, explanation: "Checking your watch excessively breaks your rhythm. **Discipline** means trusting your training and focusing on physical execution." },
+                    { text: "Slow down slightly to save energy for the final 100 meters.", isCorrect: false, explanation: "Slowing down betrays the training objective. **Discipline** is maintaining the planned effort when it gets uncomfortable." }
+                ]
+            },
+            {
+                question: "Scenario 12: You notice after three weeks that the warm-up you wrote down isn't preparing you well enough. What is the most autonomous next step?",
+                answers: [
+                    { text: "Wait until the next official training review with your coach to mention the issue.", isCorrect: false, explanation: "Waiting ignores a problem you've identified. **Autonomy** means being proactive in managing your own performance." },
+                    { text: "Research two alternative dynamic stretches, test them out independently, and suggest the change to your coach for feedback.", isCorrect: true, explanation: "This is full **autonomy**. You identified the problem, researched a solution, and proactively brought a suggested improvement to your coach for collaboration." },
+                    { text: "Assume it's just a bad three weeks and stick to the routine no matter what.", isCorrect: false, explanation: "Ignoring evidence is rigid. **Flexibility** means constantly evaluating your routine and being willing to adjust what doesn't work." },
+                    { text: "Ask a teammate which stretches they use and copy their entire warm-up routine.", isCorrect: false, explanation: "Copying someone else ignores your specific needs. **Autonomy** means finding a routine that works best for *your* body." }
+                ]
+            }
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let quizCompleted = false;
+        let sessionAttempts = []; // New array to store detailed attempt results
+
+        const questionText = document.getElementById('question-text');
+        const answerOptions = document.getElementById('answer-options');
+        const nextQuestionBtn = document.getElementById('next-question-btn');
+        const feedbackSection = document.getElementById('feedback-section');
+        const feedbackTitle = document.getElementById('feedback-title');
+        const feedbackExplanation = document.getElementById('feedback-explanation');
+        const questionCounter = document.getElementById('question-counter');
+        const resultsDiv = document.getElementById('results');
+
+        // --- UTF-8 Safe Encoding/Decoding for btoa/atob ---
+        // Encodes a Unicode string into a Base64 string that can be safely placed in HTML attributes.
+        const b64EncodeUnicode = (str) => btoa(
+            encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
+                (match, p1) => String.fromCharCode('0x' + p1)
+            )
+        );
+
+        // Decodes a Base64 string back into a Unicode string.
+        const b64DecodeUnicode = (str) => decodeURIComponent(
+            atob(str).split('').map((c) => {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join('')
+        );
+        // --- End UTF-8 Safe Encoding/Decoding ---
+
+
+        // Fisher-Yates shuffle algorithm
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function renderQuestion() {
+            if (currentQuestionIndex >= quizData.length) {
+                showResults();
+                return;
+            }
+
+            const currentQuestion = quizData[currentQuestionIndex];
+            
+            // Shuffle the answers before rendering them
+            shuffleArray(currentQuestion.answers);
+            
+            // Reset interface elements that may have been hidden by showResults or reset
+            answerOptions.innerHTML = '';
+            feedbackSection.classList.add('hidden');
+            nextQuestionBtn.classList.add('hidden');
+            nextQuestionBtn.disabled = true;
+            resultsDiv.classList.add('hidden');
+
+            questionText.classList.remove('hidden');
+            answerOptions.classList.remove('hidden');
+            questionCounter.classList.remove('hidden');
+
+            // Update question and counter
+            questionText.textContent = currentQuestion.question;
+            questionCounter.textContent = `Question ${currentQuestionIndex + 1} of ${quizData.length}`;
+
+            // Render answers
+            currentQuestion.answers.forEach((answer, index) => {
+                const card = document.createElement('div');
+                card.classList.add('answer-card', 'p-4', 'rounded-lg', 'bg-white', 'shadow-md', 'flex', 'items-center', 'text-base', 'font-medium');
+                card.dataset.index = index;
+                // Use letters A, B, C, D for the four options
+                card.innerHTML = `<span class="mr-3 font-bold text-[#FF8C00]">${String.fromCharCode(65 + index)}.</span> ${answer.text}`;
+                card.addEventListener('click', () => checkAnswer(card, answer));
+                answerOptions.appendChild(card);
+            });
+        }
+
+        function checkAnswer(selectedCard, selectedAnswer) {
+            if (quizCompleted) return;
+
+            const allAnswerCards = answerOptions.querySelectorAll('.answer-card');
+            
+            // Disable all cards and dim unselected ones
+            allAnswerCards.forEach(card => {
+                card.classList.add('unselected');
+                card.removeEventListener('click', checkAnswer);
+            });
+            
+            selectedCard.classList.remove('unselected');
+            selectedCard.classList.add('selected');
+
+            // Find the correct answer object for logging, regardless of user choice
+            const currentQuestionData = quizData[currentQuestionIndex];
+            const correctAnswerObject = currentQuestionData.answers.find(a => a.isCorrect);
+
+            // Store attempt data
+            const attemptData = {
+                question: currentQuestionData.question,
+                selectedText: selectedAnswer.text,
+                isCorrect: selectedAnswer.isCorrect,
+                correctAnswerText: correctAnswerObject.text,
+                correctExplanation: correctAnswerObject.explanation
+            };
+            sessionAttempts.push(attemptData);
+
+
+            // Set feedback based on correctness
+            if (selectedAnswer.isCorrect) {
+                score++;
+                selectedCard.classList.add('correct');
+                feedbackTitle.textContent = "Awesome choice! That's the mindset of a champion.";
+                feedbackTitle.classList.remove('text-red-700');
+                feedbackTitle.classList.add('text-green-700');
+                feedbackSection.classList.remove('bg-red-100');
+                feedbackSection.classList.add('bg-green-100');
+            } else {
+                selectedCard.classList.add('incorrect');
+                feedbackTitle.textContent = "Good try, but let's sharpen that focus.";
+                feedbackTitle.classList.remove('text-green-700');
+                feedbackTitle.classList.add('text-red-700');
+                feedbackSection.classList.remove('bg-green-100');
+                feedbackSection.classList.add('bg-red-100');
+                
+                // Highlight the correct answer
+                const correctCard = Array.from(allAnswerCards).find(card => {
+                    // Find the card whose content includes the correct answer text
+                    return card.textContent.includes(correctAnswerObject.text);
+                });
+                
+                if (correctCard) {
+                    correctCard.classList.remove('unselected');
+                    correctCard.classList.add('selected', 'correct');
+                }
+            }
+
+            feedbackExplanation.textContent = selectedAnswer.explanation;
+            feedbackSection.classList.remove('hidden');
+            
+            // Update the text for the next button if it's the last question
+            if (currentQuestionIndex === quizData.length - 1) {
+                nextQuestionBtn.textContent = "See Results";
+            } else {
+                nextQuestionBtn.textContent = "Next Challenge";
+            }
+
+            nextQuestionBtn.classList.remove('hidden');
+            nextQuestionBtn.disabled = false;
+        }
+
+        function getResultMessage(score, totalQuestions) {
+            if (score === totalQuestions) {
+                return {
+                    title: `PERFECT SCORE! 🥇 ${score}/${totalQuestions}`,
+                    text: `You are an elite athlete with amazing mental skills. Your **Autonomy** and **Flexibility** are already top-tier. You manage your routine like a professional!`,
+                    color: 'text-green-700'
+                };
+            } else if (score >= totalQuestions * 0.75) {
+                return {
+                    title: `GREAT JOB! 🎉 ${score}/${totalQuestions}`,
+                    text: `Excellent understanding of **Adaptation**. You know how to take charge and adjust your routine. Just a few more mental reps to perfect that flexible mindset.`,
+                    color: 'text-blue-700'
+                };
+            } else {
+                return {
+                    title: `GOOD EFFORT! 👍 ${score}/${totalQuestions}`,
+                    text: `This quiz shows we have a great opportunity to improve your mental game. Focus on **taking initiative** when things change and actively using **Plan B** instead of stopping or getting frustrated.`,
+                    color: 'text-orange-700'
+                };
+            }
+        }
+
+        function showResults() {
+            quizCompleted = true;
+            questionText.classList.add('hidden');
+            answerOptions.classList.add('hidden');
+            feedbackSection.classList.add('hidden');
+            nextQuestionBtn.classList.add('hidden');
+            questionCounter.classList.add('hidden');
+            
+            const totalQuestions = quizData.length;
+            const result = getResultMessage(score, totalQuestions);
+
+            // --- Start Detailed Summary Generation ---
+            let detailedSummaryHTML = '';
+            let detailedSummaryText = ''; // For the copy function
+
+            sessionAttempts.forEach((attempt, index) => {
+                const statusIcon = attempt.isCorrect ? '✅' : '❌';
+                const statusColor = attempt.isCorrect ? 'text-green-600' : 'text-red-600';
+                const questionLetter = String.fromCharCode(65 + index);
+
+                detailedSummaryHTML += `
+                    <div class="border-t border-gray-300 pt-4 mt-4 text-left">
+                        <p class="text-lg font-bold ${statusColor}">${statusIcon} Question ${index + 1}: ${attempt.question}</p>
+                        <p class="mt-1 text-sm text-gray-700"><span class="font-semibold">Your Choice:</span> ${attempt.selectedText}</p>
+                        <p class="mt-1 text-sm ${statusColor} font-semibold"><span class="text-gray-900">Correct Answer:</span> ${attempt.correctAnswerText}</p>
+                        <p class="mt-2 text-sm text-gray-700">***Explanation: ${attempt.correctExplanation}</p>
+                    </div>
+                `;
+                
+                detailedSummaryText += `
+--- Question ${index + 1} ---
+Q: ${attempt.question}
+Your Choice (${statusIcon}): ${attempt.selectedText}
+Correct Answer: ${attempt.correctAnswerText}
+Explanation: ${attempt.correctExplanation}
+`;
+            });
+            // --- End Detailed Summary Generation ---
+
+            const resultsHTML = `
+                <div class="${result.color} text-4xl font-extrabold mb-2">${result.title}</div>
+                <div class="text-xl font-medium text-gray-800 mb-6">${result.text}</div>
+                
+                <div id="detailed-results-container" class="max-h-96 overflow-y-auto p-4 border rounded-lg bg-white shadow-inner">
+                    <h4 class="text-xl font-bold text-[#0A3D62] mb-3 border-b pb-2">Full Test Review</h4>
+                    ${detailedSummaryHTML}
+                </div>
+
+                <div class="space-x-4 pt-4">
+                    <button id="copy-results-btn" class="px-6 py-3 bg-[#0A3D62] text-white font-bold rounded-lg shadow-md hover:bg-[#082C4A] transition duration-300" data-summary="${b64EncodeUnicode(detailedSummaryText)}">
+                        Copy Results
+                    </button>
+                    <button id="reset-test-btn" class="px-6 py-3 border-2 border-[#FF8C00] text-[#FF8C00] font-bold rounded-lg shadow-md hover:bg-yellow-50 transition duration-300">
+                        Reset Test
+                    </button>
+                </div>
+            `;
+
+            resultsDiv.innerHTML = resultsHTML;
+            resultsDiv.classList.remove('hidden');
+
+            document.getElementById('copy-results-btn').addEventListener('click', copyResults);
+            document.getElementById('reset-test-btn').addEventListener('click', resetQuiz);
+        }
+
+        function copyResults() {
+            const totalQuestions = quizData.length;
+            const result = getResultMessage(score, totalQuestions);
+            // Decode the detailed summary text using the new safe function
+            const detailedSummaryText = b64DecodeUnicode(document.getElementById('copy-results-btn').dataset.summary); 
+
+            const copyText = `
+--- Athletics Mental Skills Quiz Results ---
+Athlete: [Client Name, Date]
+Score: ${score} out of ${totalQuestions}
+Summary: ${result.title.split(' ')[0]}!
+Mental State Feedback: ${result.text}
+
+==================================================
+        
+FULL QUESTION-BY-QUESTION REVIEW
+${detailedSummaryText}
+--- End of Test ---
+`;
+            // Use document.execCommand('copy') for better compatibility in iFrames
+            const tempTextArea = document.createElement('textarea');
+            tempTextArea.value = copyText;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempTextArea);
+            
+            // Provide visual confirmation (non-alert version)
+            const copyBtn = document.getElementById('copy-results-btn');
+            const originalText = copyBtn.textContent;
+            copyBtn.textContent = 'Copied!';
+            setTimeout(() => { copyBtn.textContent = originalText; }, 1500);
+        }
+
+        function resetQuiz() {
+            currentQuestionIndex = 0;
+            score = 0;
+            quizCompleted = false;
+            sessionAttempts = []; // Critical: Clear the stored attempts
+            
+            // Re-show main quiz containers and hide results
+            questionText.classList.remove('hidden');
+            answerOptions.classList.remove('hidden');
+            questionCounter.classList.remove('hidden');
+            resultsDiv.classList.add('hidden');
+            
+            renderQuestion();
+        }
+
+        // Event listener for Next button
+        nextQuestionBtn.addEventListener('click', () => {
+            currentQuestionIndex++;
+            renderQuestion();
+        });
+
+        // Initialize quiz
+        document.addEventListener('DOMContentLoaded', renderQuestion);
+    </script>
+
+</body>
+</html>
